@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: etl-db
+    environment:
+      POSTGRES_USER: etl
+      POSTGRES_PASSWORD: etl
+      POSTGRES_DB: etl
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  etl:
+    build:
+      context: ./etl
+    container_name: etl-runner
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: etl
+      DB_USER: etl
+      DB_PASSWORD: etl
+      HN_BASE_URL: "https://hacker-news.firebaseio.com/v0"
+      HN_TOP_STORIES: "50"
+      ETL_SLEEP_SECONDS: "300"
+    volumes:
+      - ./etl:/app
+    command: ["python", "-m", "etl"]
+
+volumes:
+  db_data:
